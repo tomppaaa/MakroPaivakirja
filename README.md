@@ -14,3 +14,5 @@ Sovelluksen ominaisuuksia ovat:
 
 -Annosnäkymästä voi lisätä annoksiin raaka-aineita ja makroja.
 
+-Tekoäly web käyttöliittymä mm. reseptien suosituksiin tallennetun datan pohjalta.
+
