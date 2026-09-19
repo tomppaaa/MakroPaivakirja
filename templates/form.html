@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <title>Uusi viesti</title>
+</head>
+<body>
+
+    <h2>Lähetä viesti</h2>
+
+    <!-- Form lähettää tiedot osoitteeseen /result HTTP POST -metodilla -->
+    <form action="/result" method="POST">
+        <label for="message">Viesti:</label><br>
+        <textarea id="message" name="message" rows="5" cols="40" required></textarea>
+        
+        <br><br>
+        
+        <input type="submit" value="Lähetä">
+    </form>
+
+</body>
+</html>

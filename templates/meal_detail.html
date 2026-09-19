@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ meal.name }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1><a href="/">Meal Tracker</a></h1>
+    </header>
+
+    <main>
+        <section class="meal-card">
+            <h2>{{ meal.name }}</h2>
+            <p><strong>Type:</strong> {{ meal.meal_type }}</p>
+            <p><strong>Calories:</strong> {{ meal.calories or 0 }} kcal</p>
+            <p><strong>Protein:</strong> {{ meal.protein or 0 }} g</p>
+            <p><strong>Carbohydrates:</strong> {{ meal.carbs or 0 }} g</p>
+            <p><strong>Fat:</strong> {{ meal.fat or 0 }} g</p>
+            <p><strong>Price:</strong> €{{ meal.price or 0.0 }}</p>
+
+            {% if session.get('user_id') == meal.user_id %}
+                <div class="meal-actions">
+                    <a href="/meal/{{ meal.id }}/edit" class="action-link">Edit</a>
+                    <form action="/meal/{{ meal.id }}/delete" method="POST" onsubmit="return confirm('Are you sure you want to delete this meal?');" class="inline-form">
+                        <button type="submit" class="danger-button">Delete meal</button>
+                    </form>
+                </div>
+            {% endif %}
+
+            <p>
+                <a href="/" class="action-link">Back to home</a>
+            </p>
+        </section>
+    </main>
+</body>
+</html>

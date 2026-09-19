@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1><a href="/">Meal Tracker</a></h1>
+  </header>
+
+  <main>
+    <section class="meal-card">
+      <h2>Create account</h2>
+      <form action="/create" method="post">
+        <p>
+          Username: <br />
+          <input type="text" name="username" />
+        </p>
+        <p>
+          Password: <br />
+          <input type="password" name="password1" />
+        </p>
+        <p>
+          Password again: <br />
+          <input type="password" name="password2" />
+        </p>
+        <button type="submit">Create account</button>
+      </form>
+    </section>
+  </main>
+</body>
