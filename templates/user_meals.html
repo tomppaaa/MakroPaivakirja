@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ user.username }} - Meals</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1><a href="/">Meal Tracker</a></h1>
+        <nav>
+            <a href="/">Home</a>
+            {% if session.get("user_id") %}
+                <a href="/profile">Profile</a>
+                <a href="/logout">Log out</a>
+            {% else %}
+                <a href="/login">Sign in</a>
+                <a href="/register">Register</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>{{ user.username }}'s meals</h2>
+            {% for meal in meals %}
+                <article class="meal-card">
+                    <h3><a href="/meal/{{ meal.id }}">{{ meal.name }}</a> ({{ meal.meal_type }})</h3>
+                    <p><strong>Macros:</strong> {{ meal.calories or 0 }} kcal | P: {{ meal.protein or 0 }}g | C: {{ meal.carbs or 0 }}g | F: {{ meal.fat or 0 }}g</p>
+                    <p><strong>Price:</strong> €{{ meal.price or 0.0 }}</p>
+                </article>
+            {% else %}
+                <p>This user has not added any meals yet.</p>
+            {% endfor %}
+        </section>
+    </main>
+</body>
+</html>
