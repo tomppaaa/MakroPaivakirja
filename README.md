@@ -1,20 +1,13 @@
-Sovelluksessa voi tallentaa päivän aikana syötyjä annoksia niiden sisältämiä makroja ja reseptejä.
+## Välipalautus 1
 
-Sovelluksen ominaisuuksia ovat:
-
--Sovellukseen pystyy myös kirjautua sisään ja ulos.
-
--Käyttäjä pystyy lisäämään, muokkaamaan ja poistamaan annoksia.
-
--Käyttäjä pystyy lisäämään reseptejä annoksiin.
-
--Kirjautuessa näkee tallennetut annokset, dataa makrojen määrästä ja suosituksia lähitulevaisuuteen.
-
--Käyttäjä voi hakea dataa valitsemansa aikajakson perusteella.
-
--Annosnäkymästä voi lisätä annoksiin raaka-aineita ja makroja.
-
--Tekoäly web käyttöliittymä mm. reseptien suosituksiin tallennetun datan pohjalta.
+- Sovelluksessa voi tallentaa päivän aikana syötyjä annoksia, niiden sisältämiä makroja ja reseptejä.
+- Sovellukseen voi kirjautua sisään ja sieltä voi kirjautua ulos.
+- Käyttäjä voi lisätä, muokata ja poistaa annoksia.
+- Käyttäjä voi lisätä reseptejä annoksiin.
+- Kirjautunut käyttäjä näkee tallennetut annokset, makrojen määrän ja suosituksia lähitulevaisuuteen.
+- Käyttäjä voi hakea dataa valitsemansa aikajakson perusteella.
+- Annosnäkymästä voi lisätä annoksiin raaka-aineita ja makroja.
+- Tekoälyä voi hyödyntää reseptisuosituksissa tallennetun datan pohjalta.
 
 ## Välipalautus 2
 
