@@ -83,6 +83,16 @@ def profile():
     )
 
 
+@app.route("/user/<int:user_id>")
+def user_meals(user_id):
+    user = users.get_user_by_id(user_id)
+    if not user:
+        return "User not found", 404
+
+    user_meals = meals.get_meals_by_user(user_id)
+    return render_template("user_meals.html", user=user, meals=user_meals)
+
+
 @app.route("/profile/change-password", methods=["POST"])
 def change_password():
     user_id = session.get("user_id")

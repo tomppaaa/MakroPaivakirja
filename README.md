@@ -33,7 +33,7 @@ Sovelluksen ominaisuuksia ovat:
 1. Kopioi projekti toiselle koneelle GitHubista tai zip-tiedostona.
 2. Voit myös kloonata repon komennolla:
    ```bash
-   git clone https://github.com/tomppaaa/tikawe-test.git
+   git clone https://github.com/tomppaaa/Meal_tracker.git
    ```
 3. Avaa terminaali projektin juurihakemistoon.
 4. Varmista, että Python 3 on asennettu.
