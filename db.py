@@ -1,4 +1,5 @@
 import sqlite3
+from pathlib import Path
 from flask import g
 
 
@@ -11,11 +12,13 @@ def get_connection():
 
 def ensure_meals_schema():
     con = get_connection()
+    init_sql = Path(__file__).with_name("init.sql").read_text(encoding="utf-8")
+    con.executescript(init_sql)
     columns = con.execute("PRAGMA table_info(meals)").fetchall()
     existing = {row[1] for row in columns}
     if "diet_tags" not in existing:
         con.execute("ALTER TABLE meals ADD COLUMN diet_tags TEXT DEFAULT ''")
-        con.commit()
+    con.commit()
     con.close()
 
 
