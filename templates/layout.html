@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Meal Tracker{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1 class="site-title"><a href="/">Meal Tracker</a></h1>
+
+        {% if session.get("user_id") %}
+            <div class="user-status">Logged in as {{ session.user_name }}.</div>
+        {% else %}
+            <div class="user-status">Log in or register to track your meals!</div>
+        {% endif %}
+
+        <nav>
+            {% if session.get("user_id") %}
+                <a href="/">Home</a>
+                <a href="/profile">Profile</a>
+                <a href="/logout">Log out</a>
+            {% else %}
+                <a href="/">Home</a>
+                <a href="/login">Log in</a>
+                <a href="/register">Register</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
