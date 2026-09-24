@@ -41,7 +41,7 @@
    ```bash
    python3 app.py
    ```
-8. Avaa selaimessa osoite http://127.0.0.1:5000.
+8. Avaa selaimessa osoite http://127.0.0.1:5000
 9. Testaa sovellusta:
    - Luo tili ja kirjaudu sisään.
    - Testaa annosten lisäämistä, muokkaamista, poistamista, hakua ja profiilin hallintaa.

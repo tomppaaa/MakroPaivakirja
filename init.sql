@@ -1,5 +1,19 @@
 PRAGMA foreign_keys = ON;
 
+CREATE TABLE IF NOT EXISTS diets (
+    id INTEGER PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL
+);
+
+DELETE FROM diets WHERE id NOT IN (1, 2, 3, 4);
+
+INSERT INTO diets (id, name) VALUES
+    (1, 'Keto'),
+    (2, 'Vegan'),
+    (3, 'Gluten-free'),
+    (4, 'High-protein')
+ON CONFLICT(id) DO UPDATE SET name = excluded.name;
+
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,

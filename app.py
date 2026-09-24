@@ -7,30 +7,65 @@ app.secret_key = config.SECRET_KEY
 
 db.ensure_meals_schema()
 
-DIETS = [
-    {"id": 1, "name": "Keto"},
-    {"id": 2, "name": "Vegaani"},
-    {"id": 3, "name": "Gluteeniton"},
-    {"id": 4, "name": "Korkeaproteiininen"}
-]   
+def get_diets():
+    return db.query("SELECT id, name FROM diets ORDER BY id")
+
+
+def render_form_with_errors(template_name, errors=None, **context):
+    return render_template(template_name, errors=errors or [], **context)
+
+
+def validate_required_fields(payload, rules):
+    errors = []
+    for field_name, message in rules.items():
+        value = payload.get(field_name, "")
+        if isinstance(value, str):
+            value = value.strip()
+        if not value:
+            errors.append(message)
+    return errors
+
+
+def build_profile_view(user_id, user=None):
+    user = user or users.get_user_by_id(user_id)
+    meal_count = len(meals.get_meals_by_user(user_id))
+    total_calories = sum((meal.get("calories") or 0) for meal in meals.get_meals_by_user(user_id))
+    total_price = sum((meal.get("price") or 0) for meal in meals.get_meals_by_user(user_id))
+    return {
+        "user": user,
+        "meal_count": meal_count,
+        "total_calories": total_calories,
+        "total_price": total_price,
+    }
+
 
 @app.route("/register")
 def register():
-    return render_template("register.html")
+    return render_template("register.html", errors=[], username="")
 
 @app.route("/create", methods=["POST"])
 def create():
-    username = request.form["username"].strip()
-    password1 = request.form["password1"]
-    password2 = request.form["password2"]
+    username = request.form.get("username", "").strip()
+    password1 = request.form.get("password1", "")
+    password2 = request.form.get("password2", "")
+    errors = validate_required_fields(
+        {"username": username, "password1": password1},
+        {
+            "username": "Username cannot be empty.",
+            "password1": "Password cannot be empty.",
+        },
+    )
 
     if password1 != password2:
-        return "Error: passwords do not match"
+        errors.append("Passwords do not match.")
+
+    if errors:
+        return render_form_with_errors("register.html", errors=errors, username=username)
 
     try:
         user_id = users.create_user(username, password1)
     except ValueError as error:
-        return f"Error: {error}"
+        return render_form_with_errors("register.html", errors=[str(error)], username=username)
 
     session["user_id"] = user_id
     session["user_name"] = username
@@ -39,18 +74,28 @@ def create():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"].strip()
-        password = request.form["password"]
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        errors = validate_required_fields(
+            {"username": username, "password": password},
+            {
+                "username": "Username cannot be empty.",
+                "password": "Password cannot be empty.",
+            },
+        )
+
+        if errors:
+            return render_form_with_errors("login.html", errors=errors, username=username)
 
         user = users.verify_user(username, password)
         if not user:
-            return "Error: invalid username or password"
+            return render_form_with_errors("login.html", errors=["Invalid username or password."], username=username)
 
         session["user_id"] = user["id"]
         session["user_name"] = user["username"]
         return redirect("/")
 
-    return render_template("login.html")
+    return render_form_with_errors("login.html", errors=[], username="")
 
 @app.route("/logout")
 def logout():
@@ -70,17 +115,8 @@ def profile():
         session.pop("user_name", None)
         return redirect("/login")
 
-    meal_count = len(meals.get_meals_by_user(user_id))
-    total_calories = sum((meal.get("calories") or 0) for meal in meals.get_meals_by_user(user_id))
-    total_price = sum((meal.get("price") or 0) for meal in meals.get_meals_by_user(user_id))
-
-    return render_template(
-        "profile.html",
-        user=user,
-        meal_count=meal_count,
-        total_calories=total_calories,
-        total_price=total_price,
-    )
+    context = build_profile_view(user_id, user)
+    return render_form_with_errors("profile.html", errors=[], **context)
 
 
 @app.route("/user/<int:user_id>")
@@ -107,11 +143,17 @@ def change_password():
     if not user:
         return redirect("/login")
 
+    errors = []
     if not users.verify_user(user["username"], current_password):
-        return "Error: current password is incorrect"
+        errors.append("Current password is incorrect.")
+    if not new_password:
+        errors.append("New password cannot be empty.")
+    if new_password != confirm_password:
+        errors.append("New passwords do not match.")
 
-    if not new_password or new_password != confirm_password:
-        return "Error: new passwords do not match"
+    if errors:
+        context = build_profile_view(user_id, user)
+        return render_form_with_errors("profile.html", errors=errors, **context)
 
     users.update_password(user_id, new_password)
     return redirect("/profile")
@@ -130,16 +172,21 @@ def change_username():
     if not user:
         return redirect("/login")
 
+    errors = []
     if not users.verify_user(user["username"], password):
-        return "Error: password is incorrect"
-
+        errors.append("Password is incorrect.")
     if not new_username:
-        return "Error: username cannot be empty"
+        errors.append("Username cannot be empty.")
+
+    if errors:
+        context = build_profile_view(user_id, user)
+        return render_form_with_errors("profile.html", errors=errors, **context)
 
     try:
         users.update_username(user_id, new_username)
     except ValueError as error:
-        return f"Error: {error}"
+        context = build_profile_view(user_id, user)
+        return render_form_with_errors("profile.html", errors=[str(error)], **context)
 
     session["user_name"] = new_username
     return redirect("/profile")
@@ -157,7 +204,8 @@ def delete_account():
         return redirect("/login")
 
     if not users.verify_user(user["username"], password):
-        return "Error: password is incorrect"
+        context = build_profile_view(user_id, user)
+        return render_form_with_errors("profile.html", errors=["Password is incorrect."], **context)
 
     users.delete_user(user_id)
     session.pop("user_id", None)
@@ -227,10 +275,11 @@ def index():
     sql += " ORDER BY m.created_at DESC"
 
     meal_rows = db.query(sql, params)
+    diets = get_diets()
     return render_template(
         "index.html",
         meals=meal_rows,
-        all_diets=DIETS,
+        all_diets=diets,
         selected_diets=selected_diets,
         query=search_query,
         min_price=min_price,
@@ -254,7 +303,7 @@ def result():
 
 @app.route("/meal")
 def show_form():
-    return render_template("meal.html", diets=DIETS)
+    return render_template("meal.html", diets=get_diets())
 
 
 @app.route("/meal/<int:meal_id>")
@@ -262,7 +311,7 @@ def meal_detail(meal_id):
     meal = meals.get_meal_by_id(meal_id)
     if not meal:
         return "Meal not found", 404
-    return render_template("meal_detail.html", meal=meal, diets=DIETS)
+    return render_template("meal_detail.html", meal=meal, diets=get_diets())
 
 
 @app.route("/meal/<int:meal_id>/edit", methods=["GET", "POST"])
@@ -287,7 +336,7 @@ def edit_meal(meal_id):
         )
         return redirect("/")
 
-    return render_template("edit_meal.html", meal=meal, diets=DIETS)
+    return render_template("edit_meal.html", meal=meal, diets=get_diets())
 
 
 @app.route("/meal/<int:meal_id>/delete", methods=["POST"])
@@ -308,10 +357,14 @@ def delete_meal(meal_id):
 def add_meal():
     user_id = session.get("user_id")
     if not user_id:
-        return "Error: You must be logged in to add a meal"
+        return render_form_with_errors(
+            "meal.html",
+            errors=["You must be logged in to add a meal."],
+            diets=get_diets(),
+        )
 
-    name = request.form["name"]
-    meal_type = request.form["meal_type"]
+    name = request.form.get("name", "")
+    meal_type = request.form.get("meal_type", "")
     calories = request.form.get("calories", 0)
     protein = request.form.get("protein", 0)
     carbs = request.form.get("carbs", 0)
@@ -319,6 +372,28 @@ def add_meal():
     price = request.form.get("price", 0)
     selected_diets = request.form.getlist("diets")
     diet_tags = ",".join(selected_diets)
+    errors = validate_required_fields(
+        {"name": name, "meal_type": meal_type},
+        {
+            "name": "Meal name is required.",
+            "meal_type": "Meal type is required.",
+        },
+    )
+
+    if errors:
+        return render_form_with_errors(
+            "meal.html",
+            errors=errors,
+            diets=get_diets(),
+            meal_name=name,
+            meal_type_value=meal_type,
+            calories_value=calories,
+            protein_value=protein,
+            carbs_value=carbs,
+            fat_value=fat,
+            price_value=price,
+            selected_diets=selected_diets,
+        )
 
     try:
         meal_id = meals.create_meal(
@@ -333,7 +408,19 @@ def add_meal():
             diet_tags=diet_tags,
         )
     except ValueError as error:
-        return f"Error: {error}"
+        return render_form_with_errors(
+            "meal.html",
+            errors=[str(error)],
+            diets=get_diets(),
+            meal_name=name,
+            meal_type_value=meal_type,
+            calories_value=calories,
+            protein_value=protein,
+            carbs_value=carbs,
+            fat_value=fat,
+            price_value=price,
+            selected_diets=selected_diets,
+        )
 
     print(f"Lisätty ateria: {name} ({meal_type})")
     print(f"Makrot: {calories} kcal, {protein}g proteiinia, {carbs}g hiilihydraatteja, {fat}g rasvaa")
