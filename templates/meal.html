@@ -1,84 +1,74 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Add Meal</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    <header>
-        <h1><a href="/">Meal Tracker</a></h1>
-    </header>
+{% extends "layout.html" %}
 
-    <main>
-        <section class="meal-card">
-            <h2>Add a new meal</h2>
+{% block title %}Add Meal{% endblock %}
 
-            {% if errors %}
-                <div class="form-error">
-                    <ul>
-                        {% for error in errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% endif %}
+{% block content %}
+    <section class="meal-card">
+        <h2>Add a new meal</h2>
 
-            <form action="/add_meal" method="POST">
-                <p>
-                    <label for="name">Meal name:</label><br>
-                    <input type="text" id="name" name="name" value="{{ meal_name or '' }}" required>
-                </p>
-
-                <p>
-                    <label for="meal_type">Meal type:</label><br>
-                    <select id="meal_type" name="meal_type" required>
-                        <option value="Breakfast" {% if meal_type_value == 'Breakfast' %}selected{% endif %}>Breakfast</option>
-                        <option value="Lunch" {% if meal_type_value == 'Lunch' %}selected{% endif %}>Lunch</option>
-                        <option value="Dinner" {% if meal_type_value == 'Dinner' %}selected{% endif %}>Dinner</option>
-                        <option value="Snack" {% if meal_type_value == 'Snack' %}selected{% endif %}>Snack</option>
-                        <option value="Evening meal" {% if meal_type_value == 'Evening meal' %}selected{% endif %}>Evening meal</option>
-                    </select>
-                </p>
-
-                <p>
-                    <label for="calories">Calories (kcal):</label><br>
-                    <input type="number" id="calories" name="calories" min="0" value="{{ calories_value if calories_value is not none else 0 }}">
-                </p>
-
-                <p>
-                    <label for="protein">Protein (g):</label><br>
-                    <input type="number" id="protein" name="protein" min="0" value="{{ protein_value if protein_value is not none else 0 }}">
-                </p>
-
-                <p>
-                    <label for="carbs">Carbohydrates (g):</label><br>
-                    <input type="number" id="carbs" name="carbs" min="0" value="{{ carbs_value if carbs_value is not none else 0 }}">
-                </p>
-
-                <p>
-                    <label for="fat">Fat (g):</label><br>
-                    <input type="number" id="fat" name="fat" min="0" value="{{ fat_value if fat_value is not none else 0 }}">
-                </p>
-
-                <p>
-                    <label for="price">Price (€):</label><br>
-                    <input type="number" id="price" name="price" min="0" step="0.01" value="{{ price_value if price_value is not none else 0 }}">
-                </p>
-
-                <p>
-                    <strong>Diet categories:</strong><br>
-                    {% for diet in diets %}
-                        <label>
-                            <input type="checkbox" name="diets" value="{{ diet.id }}" {% if diet.id|string in selected_diets %}checked{% endif %}>
-                            {{ diet.name }}
-                        </label><br>
+        {% if errors %}
+            <div class="form-error">
+                <ul>
+                    {% for error in errors %}
+                        <li>{{ error }}</li>
                     {% endfor %}
-                </p>
+                </ul>
+            </div>
+        {% endif %}
 
-                <button type="submit">Save meal</button>
-            </form>
-        </section>
-    </main>
-</body>
-</html>
+        <form action="/add_meal" method="POST">
+            <p>
+                <label for="name">Meal name:</label><br>
+                <input type="text" id="name" name="name" value="{{ meal_name or '' }}" required>
+            </p>
+
+            <p>
+                <label for="meal_type">Meal type:</label><br>
+                <select id="meal_type" name="meal_type" required>
+                    <option value="Breakfast" {% if meal_type_value == 'Breakfast' %}selected{% endif %}>Breakfast</option>
+                    <option value="Lunch" {% if meal_type_value == 'Lunch' %}selected{% endif %}>Lunch</option>
+                    <option value="Dinner" {% if meal_type_value == 'Dinner' %}selected{% endif %}>Dinner</option>
+                    <option value="Snack" {% if meal_type_value == 'Snack' %}selected{% endif %}>Snack</option>
+                    <option value="Evening meal" {% if meal_type_value == 'Evening meal' %}selected{% endif %}>Evening meal</option>
+                </select>
+            </p>
+
+            <p>
+                <label for="calories">Calories (kcal):</label><br>
+                <input type="number" id="calories" name="calories" min="0" value="{{ calories_value if calories_value is not none else 0 }}">
+            </p>
+
+            <p>
+                <label for="protein">Protein (g):</label><br>
+                <input type="number" id="protein" name="protein" min="0" value="{{ protein_value if protein_value is not none else 0 }}">
+            </p>
+
+            <p>
+                <label for="carbs">Carbohydrates (g):</label><br>
+                <input type="number" id="carbs" name="carbs" min="0" value="{{ carbs_value if carbs_value is not none else 0 }}">
+            </p>
+
+            <p>
+                <label for="fat">Fat (g):</label><br>
+                <input type="number" id="fat" name="fat" min="0" value="{{ fat_value if fat_value is not none else 0 }}">
+            </p>
+
+            <p>
+                <label for="price">Price (€):</label><br>
+                <input type="number" id="price" name="price" min="0" step="0.01" value="{{ price_value if price_value is not none else 0 }}">
+            </p>
+
+            <p>
+                <strong>Diet categories:</strong><br>
+                {% for diet in diets %}
+                    <label>
+                        <input type="checkbox" name="diets" value="{{ diet.id }}" {% if diet.id|string in selected_diets %}checked{% endif %}>
+                        {{ diet.name }}
+                    </label><br>
+                {% endfor %}
+            </p>
+
+            <button type="submit">Save meal</button>
+        </form>
+    </section>
+{% endblock %}

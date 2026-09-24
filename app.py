@@ -219,6 +219,8 @@ def index():
     min_price = request.args.get("min_price", "").strip()
     max_price = request.args.get("max_price", "").strip()
     selected_diets = request.args.getlist("diets")
+    selected_meal_types = request.args.getlist("meal_types")
+    all_meal_types = ["Breakfast", "Lunch", "Dinner", "Snack", "Evening meal"]
 
     try:
         min_price_value = float(min_price) if min_price else None
@@ -269,6 +271,13 @@ def index():
             params.append(f"%,{diet_id},%")
         conditions.append("(" + " OR ".join(diet_filters) + ")")
 
+    if selected_meal_types:
+        meal_type_filters = []
+        for meal_type in selected_meal_types:
+            meal_type_filters.append("LOWER(m.meal_type) = LOWER(?)")
+            params.append(meal_type)
+        conditions.append("(" + " OR ".join(meal_type_filters) + ")")
+
     if conditions:
         sql += " WHERE " + " AND ".join(conditions)
 
@@ -280,7 +289,9 @@ def index():
         "index.html",
         meals=meal_rows,
         all_diets=diets,
+        all_meal_types=all_meal_types,
         selected_diets=selected_diets,
+        selected_meal_types=selected_meal_types,
         query=search_query,
         min_price=min_price,
         max_price=max_price,

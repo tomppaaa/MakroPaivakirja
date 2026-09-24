@@ -1,20 +1,15 @@
-<!DOCTYPE html>
-<html lang="fi">
-<head>
-    <meta charset="UTF-8">
-    <title>Viesti vastaanotettu</title>
-</head>
-<body>
+{% extends "layout.html" %}
 
-    <h2>Lähetetty viesti</h2>
+{% block title %}Message received{% endblock %}
 
-    <p>Antamasi viesti oli:</p>
+{% block content %}
+    <h2>Message sent</h2>
+
+    <p>Your message was:</p>
     <blockquote>
         {{ message }}
     </blockquote>
 
     <br>
-    <a href="/form">Kirjoita uusi viesti</a>
-
-</body>
-</html>
+    <a href="/form">Write a new message</a>
+{% endblock %}
