@@ -1,12 +1,6 @@
 import db
 
 
-def _row_to_dict(row):
-    if row is None:
-        return None
-    return dict(row)
-
-
 def create_meal(
     user_id,
     name,
@@ -55,7 +49,7 @@ def create_meal(
 def get_meal_by_id(meal_id):
     """Return a meal dict by id, or None if not found."""
     row = db.query("SELECT * FROM meals WHERE id = ?", (meal_id,))
-    return _row_to_dict(row[0]) if row else None
+    return db.row_to_dict(row[0]) if row else None
 
 
 def get_meals_by_user(user_id):
@@ -64,13 +58,13 @@ def get_meals_by_user(user_id):
         "SELECT * FROM meals WHERE user_id = ? ORDER BY created_at DESC",
         (user_id,),
     )
-    return [_row_to_dict(row) for row in rows]
+    return [db.row_to_dict(row) for row in rows]
 
 
 def get_all_meals():
     """Return all meals as a list of dicts."""
     rows = db.query("SELECT * FROM meals ORDER BY created_at DESC")
-    return [_row_to_dict(row) for row in rows]
+    return [db.row_to_dict(row) for row in rows]
 
 
 def update_meal(meal_id, **fields):

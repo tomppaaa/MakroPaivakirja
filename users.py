@@ -2,12 +2,6 @@ import db
 from werkzeug.security import check_password_hash, generate_password_hash
 
 
-def _row_to_dict(row):
-    if row is None:
-        return None
-    return dict(row)
-
-
 def create_user(username, password):
     """Create a new user and return the new user id."""
     username = (username or "").strip()
@@ -34,7 +28,7 @@ def get_user_by_id(user_id):
         "SELECT id, username, password_hash, created_at FROM users WHERE id = ?",
         (user_id,),
     )
-    return _row_to_dict(row[0]) if row else None
+    return db.row_to_dict(row[0]) if row else None
 
 
 def get_user_by_username(username):
@@ -43,7 +37,7 @@ def get_user_by_username(username):
         "SELECT id, username, password_hash, created_at FROM users WHERE username = ?",
         (username,),
     )
-    return _row_to_dict(row[0]) if row else None
+    return db.row_to_dict(row[0]) if row else None
 
 
 def get_all_users():
@@ -51,7 +45,7 @@ def get_all_users():
     rows = db.query(
         "SELECT id, username, created_at FROM users ORDER BY created_at DESC"
     )
-    return [_row_to_dict(row) for row in rows]
+    return [db.row_to_dict(row) for row in rows]
 
 
 def verify_user(username, password):

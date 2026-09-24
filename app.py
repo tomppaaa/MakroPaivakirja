@@ -7,8 +7,74 @@ app.secret_key = config.SECRET_KEY
 
 db.ensure_meals_schema()
 
+ALL_MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack", "Evening meal"]
+
+
 def get_diets():
     return db.query("SELECT id, name FROM diets ORDER BY id")
+
+
+def parse_price_filter(value):
+    if not value:
+        return None
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
+def build_meal_search_query(search_query, min_price_value, max_price_value, selected_diets, selected_meal_types):
+    sql = """
+        SELECT
+            m.id,
+            m.user_id,
+            m.name,
+            m.meal_type,
+            m.calories AS total_calories,
+            m.protein AS total_protein,
+            m.carbs AS total_carbs,
+            m.fat AS total_fat,
+            m.price,
+            u.username,
+            m.diet_tags
+        FROM meals m
+        LEFT JOIN users u ON u.id = m.user_id
+    """
+    params = []
+    conditions = []
+
+    if search_query:
+        search_value = f"%{search_query}%"
+        conditions.append("(LOWER(m.name) LIKE LOWER(?) OR LOWER(m.meal_type) LIKE LOWER(?) OR CAST(m.price AS TEXT) LIKE ?)")
+        params.extend([search_value, search_value, search_value])
+
+    if min_price_value is not None:
+        conditions.append("CAST(m.price AS REAL) >= ?")
+        params.append(min_price_value)
+
+    if max_price_value is not None:
+        conditions.append("CAST(m.price AS REAL) <= ?")
+        params.append(max_price_value)
+
+    if selected_diets:
+        diet_filters = []
+        for diet_id in selected_diets:
+            diet_filters.append("(',' || COALESCE(m.diet_tags, '') || ',') LIKE ?")
+            params.append(f"%,{diet_id},%")
+        conditions.append("(" + " OR ".join(diet_filters) + ")")
+
+    if selected_meal_types:
+        meal_type_filters = []
+        for meal_type in selected_meal_types:
+            meal_type_filters.append("LOWER(m.meal_type) = LOWER(?)")
+            params.append(meal_type)
+        conditions.append("(" + " OR ".join(meal_type_filters) + ")")
+
+    if conditions:
+        sql += " WHERE " + " AND ".join(conditions)
+
+    sql += " ORDER BY m.created_at DESC"
+    return sql, params
 
 
 def render_form_with_errors(template_name, errors=None, **context):
@@ -220,76 +286,24 @@ def index():
     max_price = request.args.get("max_price", "").strip()
     selected_diets = request.args.getlist("diets")
     selected_meal_types = request.args.getlist("meal_types")
-    all_meal_types = ["Breakfast", "Lunch", "Dinner", "Snack", "Evening meal"]
 
-    try:
-        min_price_value = float(min_price) if min_price else None
-    except ValueError:
-        min_price_value = None
+    min_price_value = parse_price_filter(min_price)
+    max_price_value = parse_price_filter(max_price)
 
-    try:
-        max_price_value = float(max_price) if max_price else None
-    except ValueError:
-        max_price_value = None
-
-    sql = """
-        SELECT
-            m.id,
-            m.user_id,
-            m.name,
-            m.meal_type,
-            m.calories AS total_calories,
-            m.protein AS total_protein,
-            m.carbs AS total_carbs,
-            m.fat AS total_fat,
-            m.price,
-            u.username,
-            m.diet_tags
-        FROM meals m
-        LEFT JOIN users u ON u.id = m.user_id
-    """
-    params = []
-    conditions = []
-
-    if search_query:
-        search_value = f"%{search_query}%"
-        conditions.append("(LOWER(m.name) LIKE LOWER(?) OR LOWER(m.meal_type) LIKE LOWER(?) OR CAST(m.price AS TEXT) LIKE ?)")
-        params.extend([search_value, search_value, search_value])
-
-    if min_price_value is not None:
-        conditions.append("CAST(m.price AS REAL) >= ?")
-        params.append(min_price_value)
-
-    if max_price_value is not None:
-        conditions.append("CAST(m.price AS REAL) <= ?")
-        params.append(max_price_value)
-
-    if selected_diets:
-        diet_filters = []
-        for diet_id in selected_diets:
-            diet_filters.append("(',' || COALESCE(m.diet_tags, '') || ',') LIKE ?")
-            params.append(f"%,{diet_id},%")
-        conditions.append("(" + " OR ".join(diet_filters) + ")")
-
-    if selected_meal_types:
-        meal_type_filters = []
-        for meal_type in selected_meal_types:
-            meal_type_filters.append("LOWER(m.meal_type) = LOWER(?)")
-            params.append(meal_type)
-        conditions.append("(" + " OR ".join(meal_type_filters) + ")")
-
-    if conditions:
-        sql += " WHERE " + " AND ".join(conditions)
-
-    sql += " ORDER BY m.created_at DESC"
-
+    sql, params = build_meal_search_query(
+        search_query,
+        min_price_value,
+        max_price_value,
+        selected_diets,
+        selected_meal_types,
+    )
     meal_rows = db.query(sql, params)
     diets = get_diets()
     return render_template(
         "index.html",
         meals=meal_rows,
         all_diets=diets,
-        all_meal_types=all_meal_types,
+        all_meal_types=ALL_MEAL_TYPES,
         selected_diets=selected_diets,
         selected_meal_types=selected_meal_types,
         query=search_query,
@@ -298,25 +312,26 @@ def index():
     )
 
 # Näytetään itse lomake (GET-pyyntö)
+@app.route("/messages/new")
 @app.route("/form")
 def form():
-    return render_template("form.html")
+    return render_template("message_form.html")
 
 # Vastaanotetaan lomakkeen tiedot (POST-pyyntö) ja näytetään tulos
+@app.route("/messages/success", methods=["POST"])
 @app.route("/result", methods=["POST"])
 def result():
-    # Luetaan lomakkeen kenttä "message" name-attribuutin perusteella
     user_message = request.form["message"]
-    
-    # Välitetään viesti Jinja2-muuttujana result.html-sivupohjalle
-    return render_template("result.html", message=user_message)
+    return render_template("message_success.html", message=user_message)
 
 
+@app.route("/meals/new")
 @app.route("/meal")
 def show_form():
     return render_template("meal.html", diets=get_diets())
 
 
+@app.route("/meals/<int:meal_id>")
 @app.route("/meal/<int:meal_id>")
 def meal_detail(meal_id):
     meal = meals.get_meal_by_id(meal_id)
@@ -325,6 +340,7 @@ def meal_detail(meal_id):
     return render_template("meal_detail.html", meal=meal, diets=get_diets())
 
 
+@app.route("/meals/<int:meal_id>/edit", methods=["GET", "POST"])
 @app.route("/meal/<int:meal_id>/edit", methods=["GET", "POST"])
 def edit_meal(meal_id):
     meal = meals.get_meal_by_id(meal_id)
@@ -350,6 +366,7 @@ def edit_meal(meal_id):
     return render_template("edit_meal.html", meal=meal, diets=get_diets())
 
 
+@app.route("/meals/<int:meal_id>/delete", methods=["POST"])
 @app.route("/meal/<int:meal_id>/delete", methods=["POST"])
 def delete_meal(meal_id):
     meal = meals.get_meal_by_id(meal_id)
@@ -364,6 +381,7 @@ def delete_meal(meal_id):
 
 
 # 2. POST-reitti: Otetaan lomakkeen tiedot vastaan
+@app.route("/meals", methods=["POST"])
 @app.route("/add_meal", methods=["POST"])
 def add_meal():
     user_id = session.get("user_id")
@@ -433,20 +451,7 @@ def add_meal():
             selected_diets=selected_diets,
         )
 
-    print(f"Lisätty ateria: {name} ({meal_type})")
-    print(f"Makrot: {calories} kcal, {protein}g proteiinia, {carbs}g hiilihydraatteja, {fat}g rasvaa")
-    print(f"Valitut luokittelu-ID:t: {selected_diets}")
-    print(f"Tallennettu aterian id: {meal_id}")
-
     return redirect("/")
-
-@app.route("/sqltest")
-# ESIMERKKI: Aterioiden haku tietokannasta (GET)
-def sqltest():
-    db.execute("INSERT INTO visits (visited_at) VALUES (datetime('now'))")
-    result = db.query("SELECT COUNT(*) FROM visits")
-    count = result[0][0]
-    return "Sivua on ladattu " + str(count) + " kertaa"
 
 
 

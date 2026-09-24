@@ -10,6 +10,12 @@ def get_connection():
     return con
 
 
+def row_to_dict(row):
+    if row is None:
+        return None
+    return dict(row)
+
+
 def ensure_meals_schema():
     con = get_connection()
     init_sql = Path(__file__).with_name("init.sql").read_text(encoding="utf-8")
