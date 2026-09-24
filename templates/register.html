@@ -13,10 +13,19 @@
   <main>
     <section class="meal-card">
       <h2>Create account</h2>
+      {% if errors %}
+        <div class="form-error">
+          <ul>
+            {% for error in errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
       <form action="/create" method="post">
         <p>
           Username: <br />
-          <input type="text" name="username" />
+          <input type="text" name="username" value="{{ username or '' }}" />
         </p>
         <p>
           Password: <br />
